@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/prairie-dog-sweaters/static/css/main.0fb6641c.css",
+    "main.js": "/prairie-dog-sweaters/static/js/main.c2b7b513.js",
+    "index.html": "/prairie-dog-sweaters/index.html",
+    "main.0fb6641c.css.map": "/prairie-dog-sweaters/static/css/main.0fb6641c.css.map",
+    "main.c2b7b513.js.map": "/prairie-dog-sweaters/static/js/main.c2b7b513.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.0fb6641c.css",
+    "static/js/main.c2b7b513.js"
+  ]
+}
