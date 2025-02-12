@@ -8,4 +8,9 @@ export interface PrairieDog {
     sweaterSize: 'XS' | 'S' | 'M' | 'L';
     needsSweater: boolean;
     lastSeenDate: string;
+    temperature: number;
+    story: string;
+    familySize: number;
+    colonyName: string;
+    weatherImpact: string;
 }
