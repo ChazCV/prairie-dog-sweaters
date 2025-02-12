@@ -9,12 +9,35 @@ const MAPBOX_TOKEN = 'pk.eyJ1IjoidGVuZGVyYml0dGxlIiwiYSI6ImNtMXhwa25pOTAweHEya29
 
 interface MapProps {
     prairieDogs: PrairieDog[];
+    onSelectDog: (dog: PrairieDog | null) => void;
+    selectedDog: PrairieDog | null;
 }
 
-export const MapComponent: React.FC<MapProps> = ({ prairieDogs }) => {
-    const [popupInfo, setPopupInfo] = useState<PrairieDog | null>(null);
+const WarningIcon = () => (
+    <svg width="25" height="41" viewBox="0 0 25 41" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12.5 0C5.596 0 0 5.596 0 12.5C0 21.875 12.5 41 12.5 41S25 21.875 25 12.5C25 5.596 19.404 0 12.5 0Z" fill="#ff4d4d"/>
+        <path d="M11.5 8h2v14h-2zm0 16h2v2h-2z" fill="white"/>
+    </svg>
+);
+
+export const MapComponent: React.FC<MapProps> = ({ prairieDogs, onSelectDog, selectedDog }) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [viewport, setViewport] = useState({});
+
+    const onSelectMarker = useCallback((e: React.MouseEvent, dog: PrairieDog) => {
+        e.stopPropagation();
+        onSelectDog(dog);
+        
+        const sound = document.getElementById('clickSound') as HTMLAudioElement;
+        if (sound) {
+            sound.currentTime = 0;
+            sound.volume = 1.0;
+            sound.play().catch(error => {
+                console.error('Audio playback failed:', error);
+            });
+        }
+    }, [onSelectDog]);
 
     const bounds = useMemo(() => {
         if (prairieDogs.length === 0) return undefined;
@@ -29,6 +52,27 @@ export const MapComponent: React.FC<MapProps> = ({ prairieDogs }) => {
             padding: { top: 50, bottom: 50, left: 50, right: 50 }
         };
     }, [prairieDogs]);
+
+    const markers = useMemo(() => prairieDogs.map(dog => (
+        <Marker
+            key={dog.id}
+            longitude={dog.location.lng}
+            latitude={dog.location.lat}
+            anchor="bottom"
+        >
+            <div 
+                onClick={e => onSelectMarker(e, dog)}
+                className={`marker-icon-container ${selectedDog?.id === dog.id ? 'selected' : ''}`}
+                style={{ 
+                    transform: `translate3d(0,0,0)`,
+                    willChange: 'transform',
+                    contain: 'layout style paint'
+                }}
+            >
+                <WarningIcon />
+            </div>
+        </Marker>
+    )), [prairieDogs, selectedDog, onSelectMarker]);
 
     const onMapLoad = useCallback(() => {
         setIsLoaded(true);
@@ -47,13 +91,14 @@ export const MapComponent: React.FC<MapProps> = ({ prairieDogs }) => {
     }
 
     return (
-        <div style={{ width: '100%', height: '85vh', position: 'relative' }}>
+        <div className="map-container">
             {!isLoaded && (
                 <div className="map-loading">
                     <p>Loading map...</p>
                 </div>
             )}
             <Map
+                {...viewport}
                 initialViewState={bounds || {
                     longitude: -98.5795,
                     latitude: 39.8283,
@@ -62,69 +107,18 @@ export const MapComponent: React.FC<MapProps> = ({ prairieDogs }) => {
                 }}
                 onLoad={onMapLoad}
                 onError={handleError}
+                onMove={evt => setViewport(evt.viewState)}
                 mapStyle="mapbox://styles/mapbox/outdoors-v12"
                 mapboxAccessToken={MAPBOX_TOKEN}
                 dragRotate={false}
+                renderWorldCopies={false}
                 style={{ width: '100%', height: '100%' }}
                 maxBounds={[
-                    [-140, 25], // Southwest coordinates
-                    [-60, 50]   // Northeast coordinates
+                    [-140, 25],
+                    [-60, 50]
                 ]}
             >
-                {prairieDogs.map(dog => (
-                    <Marker
-                        key={dog.id}
-                        longitude={dog.location.lng}
-                        latitude={dog.location.lat}
-                        anchor="bottom"
-                    >
-                        <div 
-                            onClick={e => {
-                                e.stopPropagation();
-                                setPopupInfo(dog);
-                            }}
-                            className="marker-icon-container"
-                        >
-                            <img 
-                                src="/marker-icon.png" 
-                                alt="marker" 
-                                style={{ width: 25, height: 41 }}
-                            />
-                        </div>
-                    </Marker>
-                ))}
-
-                {popupInfo && (
-                    <Popup
-                        longitude={popupInfo.location.lng}
-                        latitude={popupInfo.location.lat}
-                        anchor="bottom"
-                        offset={[0, -41] as [number, number]}
-                        closeButton={true}
-                        closeOnClick={false}
-                        maxWidth="500px"
-                        onClose={() => setPopupInfo(null)}
-                    >
-                        <div className="popup-content">
-                            <h3>{popupInfo.name}</h3>
-                            <div className="colony-info">
-                                <p><strong>Colony:</strong> {popupInfo.colonyName}</p>
-                                <p><strong>Family Size:</strong> {popupInfo.familySize} prairie dogs</p>
-                            </div>
-                            <p className="temperature">
-                                <strong>Current Temperature:</strong> {popupInfo.temperature}°F
-                            </p>
-                            <p><strong>Needs:</strong> {popupInfo.sweaterSize} size sweater</p>
-                            <div className="story-section">
-                                <p><strong>Story:</strong> {popupInfo.story}</p>
-                            </div>
-                            <div className="impact-section">
-                                <p><strong>Weather Impact:</strong> {popupInfo.weatherImpact}</p>
-                            </div>
-                            <p><small>Last seen: {new Date(popupInfo.lastSeenDate).toLocaleDateString()}</small></p>
-                        </div>
-                    </Popup>
-                )}
+                {markers}
             </Map>
         </div>
     );
