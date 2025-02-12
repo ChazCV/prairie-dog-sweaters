@@ -4,12 +4,15 @@ import { PrairieDog } from '../types/PrairieDog';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix for default marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+// Fix for default marker icons with public URL path
+const iconUrl = process.env.PUBLIC_URL + '/marker-icon.png';
+const iconRetinaUrl = process.env.PUBLIC_URL + '/marker-icon-2x.png';
+const shadowUrl = process.env.PUBLIC_URL + '/marker-shadow.png';
+
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-    iconUrl: require('leaflet/dist/images/marker-icon.png'),
-    shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+    iconRetinaUrl,
+    iconUrl,
+    shadowUrl,
 });
 
 interface MapProps {

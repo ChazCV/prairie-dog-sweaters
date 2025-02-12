@@ -2,7 +2,7 @@
   "name": "prairie-dog-sweaters",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
+  "homepage": "https://chaz.github.io/prairie-dog-sweaters",
   "dependencies": {
     "@types/leaflet": "^1.9.3",
     "@types/react": "^18.2.0",
